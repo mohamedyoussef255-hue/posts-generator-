@@ -1,0 +1,6 @@
+{
+  "name": "منصة توليد منشورات الفيس بوك",
+  "description": "منصة عربية احترافية لتوليد منشورات فيسبوك إبداعية مطولة، رفع الصور، المشاركة السريعة عبر فيسبوك وواتساب، وجدولة وتصدير المحتوى مع لوحة إعدادات مخفية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

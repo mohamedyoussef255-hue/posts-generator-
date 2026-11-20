@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة توليد منشورات الفيس بوك</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel Standalone CDN -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function App() {
+            const [topic, setTopic] = React.useState('');
+            const [audience, setAudience] = React.useState('');
+            const [ageGroup, setAgeGroup] = React.useState('18-35');
+            const [style, setStyle] = React.useState('عامية مصرية');
+            
+            const [generatedPosts, setGeneratedPosts] = React.useState([]);
+            
+            const [scheduledQueue, setScheduledQueue] = React.useState(() => {
+                const saved = localStorage.getItem('fb_posts_platform_queue');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            const [isGenerating, setIsGenerating] = React.useState(false);
+            const [notification, setNotification] = React.useState('');
+
+            const showNotification = (msg) => {
+                setNotification(msg);
+                setTimeout(() => setNotification(''), 4000);
+            };
+
+            React.useEffect(() => {
+                localStorage.setItem('fb_posts_platform_queue', JSON.stringify(scheduledQueue));
+            }, [scheduledQueue]);
+
+            const handleClearData = () => {
+                if (confirm('هل أنت متأكد من مسح كافة البوستات المجدولة في القائمة؟')) {
+                    localStorage.removeItem('fb_posts_platform_queue');
+                    setScheduledQueue([]);
+                    setGeneratedPosts([]);
+                    showNotification('🗑️ تم مسح جدول البوستات بنجاح');
+                }
+            };
+
+            const handleGenerate = () => {
+                if (!topic) {
+                    showNotification('⚠️ يرجى كتابة الموضوع أو الفكرة أولاً');
+                    return;
+                }
+                setIsGenerating(true);
+                setTimeout(() => {
+                    const creativeAngles = [
+                        {
+                            hook: "تخيل معايا لو عندك القدرة تحول كل تحدي بيواجهك لفرصة حقيقية تكسب من خلالها؟ 🤔",
+                            body: `ناس كتير بتفتكر إن النجاح بيجي صدفة، لكن الحقيقة إنه بيعتمد على الخطوة الصح في الوقت الصح.\nمعانا النهاردة هنساعدك تختصر سنين من التجربة والخطأ وتوصل لهدفك بكل ثقة.\nفكر كويس، إيه اللي منعك تبدأ إمبارح؟ ما تخليش النهاردة يضيع زي إمبارح.\nسيبك من الطرق القديمة وتعال نعرف إزاي تطور من نفسك ومن مجالك بخطوات مدروسة وبسيطة جداً.\nيلا ابدأ دلوقتي وشاركنا برأيك في الكومنتات! 👇`,
+                            tags: `#تطوير_ذات #${topic.replace(/\s+/g, '_')} #نجاح`
+                        },
+                        {
+                            hook: "سر صغير بيفرق بين الشخص العادي والشخص اللي بيحقق نتائج مذهلة كل يوم! 🚀",
+                            body: `الموضوع مش محتاج معجزة، كل الحكاية إنك محتاج استراتيجية واضحة ومناسبة لـ (${audience}).\nلو مشيت على الخطوات اللي جهزناهالك، هتلاحظ فرق كبير في خلال أيام قليلة جداً.\nاحنا دايماً بندور على الأريحية والحلول الذكية اللي توفر عليك وقت ومجهود.\nما تستستلمش للتردد، الفرصة بتيجي للي يستغلها في لحظتها.\nاستعد للخطوة اللي هتقلب موازين شغلك للأفضل! ✨`,
+                            tags: `#إبداع #${topic.replace(/\s+/g, '_')} #حلول_ذكية`
+                        },
+                        {
+                            hook: "زهقت من الطرق التقليدية اللي مش بتجيب نتيجة معاك؟ عندي ليك الحل النهائي! 💡",
+                            body: `الوقفة في مكانك هي أكبر خطر ممكن تهدد بيه نجاحك أو استمرارك.\nعشان كده، جمعنالكم خلاصة التجربة في أسلوب (${style}) عشان الكلام يوصل لقلبك وعقلك علطول.\nالناس اللي سبقتك بدأت، أنت مستني إيه عشان تاخد القرار الحاسم؟\nاضغط على اللينك أو ابعتلنا رسالة نعرفك التفاصيل كاملة من الألف للياء.\nالنجاح مش مستحيل، هو بس محتاج حد شجاع يبدأ! 💪`,
+                            tags: `#تغيير #${topic.replace(/\s+/g, '_')} #بداية_جديدة`
+                        },
+                        {
+                            hook: "كل يوم بيعدي وأنت مؤجل خطوتك، بيخلي المنافسين يبعدوا عنك خطوةزيادة! ⏳",
+                            body: `آن الأوان تفكر بطريقة مختلفة وتخرج بره الصندوق تماماً.\nالفئة العمرية (${ageGroup}) محتاجة حلول سريعة ومضمونة 100% بعيد عن التعقيد.\nاحنا وفرنا عليك الحيرة دي كلها وعملنالك اللي بتحلم بيه في مكان واحد.\nشارك البوست مع أصحابك اللي محتاجين يسمعوا الكلمتين دول النهاردة.\nمستنينكم تشرفونا وتستفيدوا من العروض المتاحة لفترة محدودة! 🔥`,
+                            tags: `#فرصة #${topic.replace(/\s+/g, '_')} #استثمار`
+                        },
+                        {
+                            hook: "إيه أكتر حاجة بتعطلك وأنت بتسعى لهدفك؟ تعال أقولك إزاي تتخطاها للأبد! 🎯",
+                            body: `الكلام اللي هقولهولك ده مش هتلاقيه في أي مكان تاني لأننا جربناه ولقينا نتائجه مرعبة.\nالتنظيم والتركيز هما سر أي تقدم حقيقي في أي مجال تخصيصاً (${audience}).\nما تخليش التفاصيل الصغيرة تشتتك عن الصورة الكبيرة اللي بتسعى تحققها.\nخد لك نفس عميق، اقرأ الكلام ده بتركيز، وابدأ طبق فوراً.\nرأيكم يهمني جداً، اكتبولي في الكومنتات إيه أكتر نقطة لفتت انتباهكم؟ 👇`,
+                            tags: `#تركيز #${topic.replace(/\s+/g, '_')} #تخطيط`
+                        },
+                        {
+                            hook: "الفرص الحقيقية مش بتتكرر كتير، واللي يفوتك النهاردة ممكن تعوضه بس بمجهود أضعاف! 🌟",
+                            body: `علشان كده قررنا نسهل عليك الطريق ونقدملك خلاصة سنين من الخبرة في بضع كلمات.\nالتطبيق العملي هو اللي بيفصل بين الكلام النظري وبين النتائج الحقيقية على الأرض.\nخليك دايماً سابق بخطوة وعرف إزاي تستغل الموارد المتاحة بأفضل شكل ممكن.\nالتجربة خير دليل، وابدأ بنفسك واحكم على النتيجة بنفسك.\nكل التفاصيل بقت جاهزة قدامك، ما عليك غير تدوس زرار البداية! 🛠️`,
+                            tags: `#تطوير #${topic.replace(/\s+/g, '_')} #احتراف`
+                        },
+                        {
+                            hook: "كلمتين في الجون.. لو فهمتهم صح، حياتك المهنية والشخصية هتتغير 180 درجة! 🔑",
+                            body: `مش مهم تبدأ كبير، المهم تبدأ صح وتكون استمرارك هو سلاحك القوي.\nالناس الناجحة مش اذكى منك، هما بس بيعرفوا يستغلوا الوقت والأدوات بذكاء.\nخصص دقايق معدودة كل يوم عشان تطور من مهاراتك وتشوف بنفسك النتيجة.\nالمجال بيتحرك بسرعة، واللي ما يتطورش بيترو لوحده.\nكن مستعد دائماً لأي مفاجآت إيجابية في طريقك! 🚀`,
+                            tags: `#نصائح #${topic.replace(/\s+/g, '_')} #إدارة_وقت`
+                        },
+                        {
+                            hook: "هل تقبل التحدي وتغير طريقتك العادية بطريقة غير تقليدية تبهر كل اللي حواليك؟ ⚡",
+                            body: `التجوال في عالم الأفكار الجديدة بيكسبك خبرة ما تتشراش بالفلوس.\nاحنا معاك خطوة بخطوة لحد ما تشوف أحلامك بتتحقق قدام عينك واقع.\nالثقة بالنفس والاحتراف هما العنوان الرئيسي لكل خطوة بنخطوها سوا.\nما ترددش أبداً في طرح أي استفسار، احنا هنا عشان نساعدك تنجح بجد.\nانتظروا مفاجآت أكتر بكتير الأيام الجاية! 🎁`,
+                            tags: `#تحدي #${topic.replace(/\s+/g, '_')} #ابداع`
+                        },
+                        {
+                            hook: "لو ملكت الأدوات الصح، هتقدر تبني أي حاجة بتطمح ليها مهما كانت صعبة! 🏗️",
+                            body: `الكثير مننا بيضيع وقت طويل في البحث عن البداية السليمة مع ناس غير متخصصة.\nلكن هنا المعايير مختلفة تماماً ومصممة خصيصاً عشان تناسب احتياجاتك بدقة.\nاستمتع بتجربة فريدة ومتميزة تضمن لك الوصول لهدفك بأقصر طريق ممكن.\nشاركنا برأيك وتجاربك السابقة في التعليقات عشان الكل يستفيد.\nدمتم موفقين ومتميزين دائماً في كل خطواتكم! 👏`,
+                            tags: `#جودة #${topic.replace(/\s+/g, '_')} #تميز`
+                        },
+                        {
+                            hook: "الخلاصة اللي هتختصر عليك وقت طويل وتديك النتيجة اللي تتمناها من أول مرة! 💎",
+                            body: `مش هطول عليك، بس الأرقام والواقع هما اللي بيتكلموا عننا وعن جودة شغلنا.\nلو لسه متردد، دي فرصتك الحقيقية عشان تاخد القرار بدون أي قلق.\nالباب مفتوح قدامك للتميز والانفراد بكل ما هو جديد ومفيد.\nاضغط متابعة للصفحة عشان يوصلك كل جديد أول بأول.\nاستنوا البوست الجای فيه تفاصيل أكتر ومفاجآت تسركم! ✨`,
+                            tags: `#حصرية #${topic.replace(/\s+/g, '_')} #مفاجآت`
+                        }
+                    ];
+
+                    const generated = creativeAngles.map((angle, index) => {
+                        const fullText = `${angle.hook}\n\n${angle.body}\n\n${angle.tags}`;
+                        return {
+                            id: Date.now() + index,
+                            text: fullText,
+                            style: style,
+                            image: null,
+                            phoneNumber: '',
+                            isEditing: false,
+                            status: 'جاهز للجدولة'
+                        };
+                    });
+
+                    setGeneratedPosts(generated);
+                    setIsGenerating(false);
+                    showNotification('✨ تم توليد 10 منشورات إبداعية بنجاح! قم برفع الصور المناسبة.');
+                }, 1800);
+            };
+
+            const handleImageUpload = (id, e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setGeneratedPosts(generatedPosts.map(p => p.id === id ? { ...p, image: reader.result } : p));
+                        showNotification('🖼️ تمت إضافة الصورة للمنشور بنجاح!');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const toggleEditPost = (id) => {
+                setGeneratedPosts(generatedPosts.map(p => p.id === id ? { ...p, isEditing: !p.isEditing } : p));
+            };
+
+            const handlePostTextChange = (id, newText) => {
+                setGeneratedPosts(generatedPosts.map(p => p.id === id ? { ...p, text: newText } : p));
+            };
+
+            const copyToClipboard = (text) => {
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('📋 تم نسخ النص إلى الحافظة بنجاح!');
+                }).catch(() => {
+                    showNotification('❌ فشل في نسخ النص');
+                });
+            };
+
+            const handlePhoneChange = (id, newPhone) => {
+                setGeneratedPosts(generatedPosts.map(p => p.id === id ? { ...p, phoneNumber: newPhone } : p));
+            };
+
+            const handleSchedulePost = (post, timeOption) => {
+                const now = new Date();
+                let publishTime = new Date();
+
+                if (timeOption === 'instant') {
+                    publishTime = new Date(now.getTime() + 1000);
+                } else if (timeOption === '2hours') {
+                    publishTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+                } else if (timeOption === 'tomorrow') {
+                    publishTime.setDate(now.getDate() + 1);
+                }
+
+                const newItem = {
+                    id: Date.now() + Math.random(),
+                    topic: topic || 'موضوع عام',
+                    content: post.text,
+                    imageStatus: post.image ? 'مرفقة ✅' : 'بدون صورة ❌',
+                    style: post.style,
+                    time: publishTime.toLocaleString('ar-EG'),
+                    status: 'مجدول ⏳'
+                };
+
+                setScheduledQueue([newItem, ...scheduledQueue]);
+                showNotification('📅 تم إضافة المنشور وحفظه في جدول النشر بنجاح!');
+            };
+
+            const sendToSpecificWhatsApp = (post) => {
+                if (!post.phoneNumber) {
+                    showNotification('⚠️ يرجى إدخال رقم الواتساب المراد الإرسال إليه أولاً');
+                    return;
+                }
+                const fullMessage = `${post.text}\n\n(مرفق صورة مع المنشور)`;
+                const cleanPhone = post.phoneNumber.replace(/\D/g, '');
+                const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(fullMessage)}`;
+                window.open(whatsappUrl, '_blank');
+                showNotification('📲 جاري فتح محادثة واتساب للنص...');
+            };
+
+            const exportToCSV = () => {
+                if (scheduledQueue.length === 0) {
+                    showNotification('⚠️ لا توجد منشورات مجدولة لتصديرها حالياً');
+                    return;
+                }
+
+                let csvContent = "\uFEFF";
+                csvContent += "ID,الموضوع,محتوى المنشور,حالة الصورة,الأسلوب,موعد النشر المقترح,الحالة\n";
+
+                scheduledQueue.forEach(item => {
+                    const cleanContent = `"${item.content.replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+                    csvContent += `${item.id},"${item.topic}",${cleanContent},"${item.imageStatus}","${item.style}","${item.time}","${item.status}"\n`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `facebook_posts_schedule_${new Date().toISOString().slice(0,10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification('📊 تم تصدير الجدول إلى ملف Excel بنجاح!');
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-4 md:p-8">
+                    {notification && (
+                        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-2xl z-50 font-semibold text-sm transition-all duration-300">
+                            {notification}
+                        </div>
+                    )}
+
+                    <header className="text-center mb-10 pt-4">
+                        <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 mb-2">
+                            منصة توليد منشورات الفيس بوك
+                        </h1>
+                        <p className="text-slate-400 text-sm md:text-base">توليد 10 منشورات إبداعية مطولة، رفع الصور من الجهاز، إرسال عبر واتساب، وجدولة وتصدير</p>
+                    </header>
+
+                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl mb-8">
+                        <h2 className="text-lg font-bold text-emerald-400 mb-4">✍️ معايير وتوليد المنشورات</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-300 mb-1">الموضوع أو الفكرة (مووجه داخلي ولا يظهر كعنوان رئيسي)</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="مثال: أهمية تنظيم الوقت لرواد الأعمال" 
+                                    value={topic}
+                                    onChange={(e) => setTopic(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-100"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">الفئة المستهدفة</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="شباب، أصحاب مشاريع..." 
+                                        value={audience}
+                                        onChange={(e) => setAudience(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-100"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">الفئة العمرية</label>
+                                    <select 
+                                        value={ageGroup} 
+                                        onChange={(e) => setAgeGroup(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-100"
+                                    >
+                                        <option value="الكل">الكل</option>
+                                        <option value="18-25">18 - 25 سنة</option>
+                                        <option value="25-40">25 - 40 سنة</option>
+                                        <option value="40+">40+ سنة</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">الأسلوب / اللهجة</label>
+                                    <select 
+                                        value={style} 
+                                        onChange={(e) => setStyle(e.target.value)}
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-100"
+                                    >
+                                        <option value="عامية مصرية">عامية مصرية ودية</option>
+                                        <option value="اللغة الدارجة / الشعبي">اللغة الدارجة / شعبي حماسي</option>
+                                        <option value="العربية الفصحى">العربية الفصحى الاحترافية</option>
+                                        <option value="رسمية Corporate">رسمية (Corporate)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={handleGenerate}
+                                disabled={isGenerating}
+                                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-lg text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+                            >
+                                {isGenerating ? 'جاري توليد 10 منشورات...' : '🚀 توليد 10 منشورات إبداعية (أكثر من 5 أسطر)'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {generatedPosts.length > 0 && (
+                        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6 mb-8">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-md font-bold text-teal-400">📱 المنشورات المولدة (ارفع صورتك الخاصة لكل منشور):</h3>
+                                <span className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full">الأسلوب: {style}</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {generatedPosts.map((post, idx) => (
+                                    <div key={post.id} className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col justify-between">
+                                        <div className="p-4 flex items-center justify-between border-b border-slate-800/60 bg-slate-900/50">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs">
+                                                    #{idx + 1}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-xs font-bold text-slate-200">منشور مقترح</h4>
+                                                    <span className="text-[10px] text-slate-400">زاوية تسويقية مختلفة</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={() => toggleEditPost(post.id)}
+                                                    className={`text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 transition-all shadow-sm ${post.isEditing ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-amber-400 border border-amber-500/30'}`}
+                                                >
+                                                    {post.isEditing ? '💾 حفظ' : '✏️ تعديل'}
+                                                </button>
+                                                <button 
+                                                    onClick={() => copyToClipboard(post.text)}
+                                                    className="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-all shadow-sm"
+                                                    title="نسخ النص"
+                                                >
+                                                    📋 نسخ
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4">
+                                            {post.isEditing ? (
+                                                <textarea 
+                                                    value={post.text}
+                                                    onChange={(e) => handlePostTextChange(post.id, e.target.value)}
+                                                    rows="10"
+                                                    className="w-full bg-slate-900 border border-emerald-500 rounded-lg p-3 text-xs text-slate-100 focus:outline-none leading-relaxed font-sans"
+                                                />
+                                            ) : (
+                                                <p className="text-xs whitespace-pre-wrap text-slate-200 leading-relaxed font-sans">{post.text}</p>
+                                            )}
+                                        </div>
+
+                                        {/* رفع الصورة من الجهاز */}
+                                        <div className="p-4 bg-slate-900/60 border-y border-slate-800 flex flex-col items-center justify-center gap-3">
+                                            {post.image ? (
+                                                <div className="relative w-full h-44 rounded-lg overflow-hidden border border-slate-700">
+                                                    <img src={post.image} alt="Uploaded" className="w-full h-full object-cover" />
+                                                    <label className="absolute bottom-2 left-2 bg-slate-900/80 hover:bg-slate-900 text-white text-[11px] px-3 py-1 rounded-md cursor-pointer border border-slate-600 shadow">
+                                                        🔄 تغيير الصورة
+                                                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(post.id, e)} className="hidden" />
+                                                    </label>
+                                                </div>
+                                            ) : (
+                                                <label className="w-full h-32 border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer bg-slate-950/50 transition-all text-slate-400 hover:text-emerald-400">
+                                                    <span className="text-2xl">📷</span>
+                                                    <span className="text-xs font-semibold">اضغط لرفع صورة من الكمبيوتر أو الموبايل</span>
+                                                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(post.id, e)} className="hidden" />
+                                                </label>
+                                            )}
+                                        </div>
+
+                                        <div className="p-4 bg-slate-900/40 flex flex-col gap-3">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-300 mb-1">إرسال عبر واتساب لرقم مخصص:</label>
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="مثال: 201012345678" 
+                                                        value={post.phoneNumber}
+                                                        onChange={(e) => handlePhoneChange(post.id, e.target.value)}
+                                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 text-slate-100"
+                                                    />
+                                                    <button 
+                                                        onClick={() => sendToSpecificWhatsApp(post)}
+                                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center justify-center gap-1 shadow-md transition-all whitespace-nowrap"
+                                                    >
+                                                        💬 إرسال
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2 border-t border-slate-800">
+                                                <span className="text-[11px] text-slate-400 block mb-2">جدولة المنشور في الجدول الزمني:</span>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <button onClick={() => handleSchedulePost(post, 'instant')} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded-lg text-center">فوري</button>
+                                                    <button onClick={() => handleSchedulePost(post, '2hours')} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded-lg text-center">بعد ساعتين</button>
+                                                    <button onClick={() => handleSchedulePost(post, 'tomorrow')} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded-lg text-center">غداً</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <div>
+                                <h2 className="text-lg font-bold text-emerald-400">📅 جدول المنشورات والمواعيد المحفوظة</h2>
+                                <p className="text-slate-400 text-xs mt-1">يتم حفظ جميع المنشورات المجدولة بصفة دائمة في المتصفح وجاهزة للتصدير</p>
+                            </div>
+                            <div className="flex gap-2 w-full md:w-auto">
+                                <button 
+                                    onClick={exportToCSV}
+                                    className="flex-1 md:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
+                                >
+                                    📊 تصدير الجدول إلى ملف Excel
+                                </button>
+                                {scheduledQueue.length > 0 && (
+                                    <button 
+                                        onClick={handleClearData}
+                                        className="bg-rose-950/50 hover:bg-rose-900 text-rose-300 border border-rose-800 px-3 py-2.5 rounded-xl text-xs font-bold transition-all"
+                                    >
+                                        مسح الجدول 🗑️
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {scheduledQueue.length === 0 ? (
+                            <div className="text-center py-10 text-slate-500 text-sm">
+                                لا توجد منشورات مجدولة حالياً. قم بتوليد المحتوى واختيار أوقات الجدولة لتظهر هنا.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-right text-sm">
+                                    <thead className="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                                        <tr>
+                                            <th className="p-3">الموضوع</th>
+                                            <th className="p-3">محتوى المنشور</th>
+                                            <th className="p-3">حالة الصورة</th>
+                                            <th className="p-3">الأسلوب</th>
+                                            <th className="p-3">موعد النشر المقترح</th>
+                                            <th className="p-3">الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/60">
+                                        {scheduledQueue.map((item) => (
+                                            <tr key={item.id} className="hover:bg-slate-950/40">
+                                                <td className="p-3 font-semibold text-emerald-300">{item.topic}</td>
+                                                <td className="p-3 text-slate-300 max-w-xs truncate">{item.content}</td>
+                                                <td className="p-3 text-xs text-slate-300">{item.imageStatus}</td>
+                                                <td className="p-3 text-slate-400 text-xs">{item.style}</td>
+                                                <td className="p-3 text-slate-300 text-xs font-mono">{item.time}</td>
+                                                <td className="p-3">
+                                                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full text-xs font-semibold">
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
